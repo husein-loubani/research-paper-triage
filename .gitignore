@@ -1,0 +1,17 @@
+# secrets -- never commit the real key
+.env
+
+# virtualenv
+.venv/
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# os
+.DS_Store
+
+# local submission scaffolding -- kept locally, not part of the published code
+SUBMISSION.md
+VIDEO_SCRIPT.md

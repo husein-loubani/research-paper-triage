@@ -1,0 +1,8 @@
+# Core: Google Agent Development Kit (pulls in google-genai for the Gemini API)
+google-adk>=1.0.0
+
+# Live external data source used by the arXiv search tool
+arxiv>=2.1.0
+
+# Loads GEMINI_API_KEY from .env
+python-dotenv>=1.0.0
