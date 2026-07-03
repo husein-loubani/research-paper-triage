@@ -1,4 +1,4 @@
-"""Entry point -- run the whole thing from the command line.
+"""Entry point. Runs the whole thing from the command line.
 
 Flow:
   1. load .env  (reads GEMINI_API_KEY)

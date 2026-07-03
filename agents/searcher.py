@@ -1,4 +1,4 @@
-"""Searcher agent -- step 1 of the pipeline.
+"""Searcher agent, step 1 of the pipeline.
 
 Takes the user's research topic, calls the live arXiv tool, and returns a list
 of candidate papers (title, authors, abstract, link). Its text output is saved
@@ -22,7 +22,7 @@ _INSTRUCTION = (
     "and `max_results` to " + str(MAX_RESULTS) + ".\n"
     "2. Return every paper the tool returns, as a numbered list. For each "
     "paper put Title, Authors, Link, and the full Abstract on their own lines.\n\n"
-    "Do not rank, filter, or summarize the papers -- that is the next agent's "
+    "Do not rank, filter, or summarize the papers. That is the next agent's "
     "job. Return them faithfully. If the tool returns an 'error' field, report "
     "that error plainly instead of inventing papers."
 )

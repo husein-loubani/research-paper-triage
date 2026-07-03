@@ -1,4 +1,4 @@
-"""Pipeline -- wires the two agents into one orchestrated flow, and runs it.
+"""Pipeline. Wires the two agents into one orchestrated flow and runs it.
 
 A SequentialAgent runs the Searcher first and the Summarizer second, passing
 candidates through shared session state. This is the course's "multi-agent

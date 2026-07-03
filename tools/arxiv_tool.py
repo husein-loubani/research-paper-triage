@@ -1,4 +1,4 @@
-"""arXiv search tool -- the live external data source.
+"""arXiv search tool, the live external data source.
 
 Wraps the `arxiv` PyPI package in a plain Python function. ADK exposes this
 function to the Searcher agent as a callable tool (a FunctionTool), so results

@@ -1,4 +1,4 @@
-"""Security guard -- runs BEFORE any live search.
+"""Security guard. Runs BEFORE any live search.
 
 Two checks keep the run controlled, which is the course's "guardrails" concept:
 
@@ -13,7 +13,7 @@ from config import MAX_RESULTS
 MAX_TOPIC_LEN = 200
 MIN_TOPIC_LEN = 3
 
-# Cheap tripwires for prompt-injection / abuse. Not exhaustive -- a sane gate,
+# Cheap tripwires for prompt injection or abuse. Not exhaustive, a sane gate,
 # not a full firewall.
 _SUSPICIOUS = (
     "ignore previous",

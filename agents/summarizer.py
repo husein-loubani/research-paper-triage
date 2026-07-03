@@ -1,4 +1,4 @@
-"""Summarizer agent -- step 2 of the pipeline.
+"""Summarizer agent, step 2 of the pipeline.
 
 Reads the `candidates` list from session state, ranks the papers by relevance
 to the topic, and writes a brief for the top ones. The output format is locked
@@ -32,7 +32,7 @@ _INSTRUCTION = (
     "brief for the top " + str(TOP_N) + " papers only (fewer if there are not "
     "that many). Apply the output-format skill below EXACTLY to every paper, "
     "and number the papers 1..N in ranked order.\n\n"
-    "----- SKILL: paper-brief output format -----\n" + _SKILL
+    "SKILL (paper brief output format):\n" + _SKILL
 )
 
 summarizer_agent = LlmAgent(
