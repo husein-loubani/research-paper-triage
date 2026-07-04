@@ -22,6 +22,7 @@ import argparse
 import asyncio
 import os
 import sys
+import time
 
 from dotenv import load_dotenv
 
@@ -75,11 +76,35 @@ def main() -> int:
     # 4) run the pipeline (imported here so a bad topic / missing key exits fast
     #    without spinning up ADK)
     from pipeline import run_triage
+    from google.genai.errors import APIError
 
     print("\nRunning Searcher -> Summarizer ...\n")
-    briefs = asyncio.run(run_triage(topic))
-    print(briefs or "(no output produced)")
-    return 0
+
+    # Gemini sometimes returns a transient 503 (model busy) or 429 (rate limit).
+    # Retry a few times with backoff so a temporary spike does not kill the run,
+    # and if it still fails, print one clean line instead of a long traceback.
+    retryable = {429, 500, 502, 503, 504}
+    max_attempts = 4
+    for attempt in range(1, max_attempts + 1):
+        try:
+            briefs = asyncio.run(run_triage(topic))
+            print(briefs or "(no output produced)")
+            return 0
+        except KeyboardInterrupt:
+            print("\nInterrupted.")
+            return 130
+        except APIError as e:
+            code = getattr(e, "code", None)
+            if code in retryable and attempt < max_attempts:
+                wait = attempt * 4
+                print(
+                    f"Gemini is busy (HTTP {code}). Retrying in {wait}s ... "
+                    f"[attempt {attempt} of {max_attempts}]"
+                )
+                time.sleep(wait)
+                continue
+            print(f"\nGemini request failed (HTTP {code}). Please try again in a minute.")
+            return 4
 
 
 if __name__ == "__main__":
