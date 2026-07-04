@@ -13,6 +13,11 @@ Usage:
     python main.py -y "..."   # skip the confirmation prompt
 """
 
+import warnings
+
+# Keep the demo output clean: hide library deprecation and experimental notices.
+warnings.filterwarnings("ignore")
+
 import argparse
 import asyncio
 import os
@@ -31,8 +36,11 @@ def _ensure_api_key() -> bool:
         print("\nERROR: no Gemini API key found.")
         print("Copy .env.example to .env and set GEMINI_API_KEY, then retry.")
         return False
-    # google-genai (used by ADK) reads GOOGLE_API_KEY; mirror the key across.
-    os.environ.setdefault("GOOGLE_API_KEY", key)
+    # google-genai (used by ADK) reads GOOGLE_API_KEY. Set only that one and drop
+    # GEMINI_API_KEY from the environment, so the SDK doesn't announce that both
+    # are set on every model call.
+    os.environ["GOOGLE_API_KEY"] = key
+    os.environ.pop("GEMINI_API_KEY", None)
     return True
 
 
