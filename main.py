@@ -22,7 +22,6 @@ import argparse
 import asyncio
 import os
 import sys
-import time
 
 from dotenv import load_dotenv
 
@@ -89,36 +88,57 @@ def main() -> int:
     retryable = {429, 500, 502, 503, 504}
     max_attempts = 4
     net_max = 2
-    for attempt in range(1, max_attempts + 1):
-        try:
-            briefs = asyncio.run(run_triage(topic))
-            print(briefs or "(no output produced)")
-            return 0
-        except KeyboardInterrupt:
-            print("\nInterrupted.")
-            return 130
-        except APIError as e:
-            code = getattr(e, "code", None)
-            if code in retryable and attempt < max_attempts:
-                wait = attempt * 4
-                print(
-                    f"Gemini is busy (HTTP {code}). Retrying in {wait}s ... "
-                    f"[attempt {attempt} of {max_attempts}]"
-                )
-                time.sleep(wait)
-                continue
-            print(f"\nGemini request failed (HTTP {code}). Please try again in a minute.")
-            return 4
-        except httpx.TransportError as e:
-            if attempt < net_max:
-                print(
-                    f"Network problem reaching Gemini ({type(e).__name__}). "
-                    f"Retrying in 4s ... [attempt {attempt} of {net_max}]"
-                )
-                time.sleep(4)
-                continue
-            print("\nCould not reach Gemini. Check your internet connection, then try again.")
-            return 5
+
+    async def _run_with_retries():
+        for attempt in range(1, max_attempts + 1):
+            try:
+                return 0, await run_triage(topic)
+            except APIError as e:
+                code = getattr(e, "code", None)
+                if code in retryable and attempt < max_attempts:
+                    wait = attempt * 4
+                    print(
+                        f"Gemini is busy (HTTP {code}). Retrying in {wait}s ... "
+                        f"[attempt {attempt} of {max_attempts}]"
+                    )
+                    await asyncio.sleep(wait)
+                    continue
+                print(f"\nGemini request failed (HTTP {code}). Please try again in a minute.")
+                return 4, None
+            except httpx.TransportError as e:
+                if attempt < net_max:
+                    print(
+                        f"Network problem reaching Gemini ({type(e).__name__}). "
+                        f"Retrying in 4s ... [attempt {attempt} of {net_max}]"
+                    )
+                    await asyncio.sleep(4)
+                    continue
+                print("\nCould not reach Gemini. Check your internet connection, then try again.")
+                return 5, None
+        return 4, None
+
+    # Run everything, including retries, inside ONE event loop. Calling asyncio.run
+    # per attempt would close and reopen the loop between tries, leaving the async
+    # HTTP client to clean up against a closed loop (the noisy "Event loop is
+    # closed" traceback). The quiet handler drops that one teardown message if it
+    # still surfaces at exit.
+    def _quiet(loop, context):
+        msg = str(context.get("exception") or context.get("message") or "")
+        if "Event loop is closed" in msg:
+            return
+        loop.default_exception_handler(context)
+
+    try:
+        with asyncio.Runner() as runner:
+            runner.get_loop().set_exception_handler(_quiet)
+            rc, briefs = runner.run(_run_with_retries())
+    except KeyboardInterrupt:
+        print("\nInterrupted.")
+        return 130
+
+    if rc == 0:
+        print(briefs or "(no output produced)")
+    return rc
 
 
 if __name__ == "__main__":
