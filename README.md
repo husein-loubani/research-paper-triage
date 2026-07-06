@@ -81,8 +81,8 @@ Locked by `skills/SKILL.md`:
 
 ## Notes
 
-- The model is set once in `config.py` (`gemini-2.5-flash`) and shared by both
-  agents, so a "model not found" mismatch can't happen.
+- The model is set once in `config.py` (`gemini-2.5-flash-lite`) and shared by
+  both agents, so a "model not found" mismatch can't happen.
 - The arXiv search is an ADK FunctionTool. An MCP server is another way to expose
   the same capability. This project uses a FunctionTool for simplicity, which
   still satisfies the "external tool" concept.

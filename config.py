@@ -5,9 +5,10 @@ onto different Gemini models. Import these values everywhere instead of
 retyping them, which is what avoids a "model not found" surprise on first run.
 """
 
-# Current Flash model on the Gemini API (AI Studio).
-# Both agents use this exact string.
-MODEL = "gemini-2.5-flash"
+# Flash-Lite model on the Gemini API (AI Studio). Chosen because the free tier
+# gives it a much larger daily request quota than gemini-2.5-flash, which caps at
+# only 20 requests per day. Both agents use this exact string.
+MODEL = "gemini-2.5-flash-lite"
 
 # How many candidate papers the Searcher may pull in a single run.
 # The security guard uses this to size the confirmation prompt.
