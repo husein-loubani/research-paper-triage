@@ -77,14 +77,18 @@ def main() -> int:
     #    without spinning up ADK)
     from pipeline import run_triage
     from google.genai.errors import APIError
+    import httpx
 
     print("\nRunning Searcher -> Summarizer ...\n")
 
-    # Gemini sometimes returns a transient 503 (model busy) or 429 (rate limit).
-    # Retry a few times with backoff so a temporary spike does not kill the run,
-    # and if it still fails, print one clean line instead of a long traceback.
+    # Gemini calls can fail two transient ways: an API status error (503 busy,
+    # 429 rate limit) or a network error (no connection, DNS failure, timeout).
+    # Retry with backoff for both, then print one clean line instead of a long
+    # traceback. Network errors give up faster, since being offline will not fix
+    # itself by waiting.
     retryable = {429, 500, 502, 503, 504}
     max_attempts = 4
+    net_max = 2
     for attempt in range(1, max_attempts + 1):
         try:
             briefs = asyncio.run(run_triage(topic))
@@ -105,6 +109,16 @@ def main() -> int:
                 continue
             print(f"\nGemini request failed (HTTP {code}). Please try again in a minute.")
             return 4
+        except httpx.TransportError as e:
+            if attempt < net_max:
+                print(
+                    f"Network problem reaching Gemini ({type(e).__name__}). "
+                    f"Retrying in 4s ... [attempt {attempt} of {net_max}]"
+                )
+                time.sleep(4)
+                continue
+            print("\nCould not reach Gemini. Check your internet connection, then try again.")
+            return 5
 
 
 if __name__ == "__main__":
